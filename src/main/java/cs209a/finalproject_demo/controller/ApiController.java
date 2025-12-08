@@ -3,6 +3,7 @@ package cs209a.finalproject_demo.controller;
 import cs209a.finalproject_demo.model.Question;
 import cs209a.finalproject_demo.service.DataAnalysisService;
 import cs209a.finalproject_demo.service.DataCollectionService;
+import cs209a.finalproject_demo.service.SampleDataGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
