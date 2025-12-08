@@ -3,101 +3,722 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stack Overflow Java Analysis</title>
+    <title>Stack Overflow Java Analysis - CS209A Final Project</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
-            background-color: #f9f9f9;
             color: #333;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .loading {
             background: white;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
+            border-radius: 10px;
             text-align: center;
-            color: #2c3e50;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .search-section {
-            margin: 25px 0;
-            text-align: center;
+        
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .search-section input[type="text"] {
-            width: 70%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
         }
-        .search-section button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-left: 10px;
-            background-color: #3498db;
+        
+        .section-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .controls label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .controls select,
+        .controls input {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .controls button {
+            padding: 8px 20px;
+            background-color: #667eea;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
         }
-        .search-section button:hover {
-            background-color: #2980b9;
+        
+        .controls button:hover {
+            background-color: #5568d3;
         }
+        
         .chart-container {
-            margin-top: 30px;
-            text-align: center;
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
         }
+        
         .chart-container canvas {
-            max-width: 100%;
-            height: 400px !important;
+            max-height: 100%;
+        }
+        
+        .insight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .insight-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .insight-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table th {
+            background-color: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .init-button {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background-color: #51cf66;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .init-button:hover {
+            background-color: #40c057;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Stack Overflow Java Thread Analysis</h1>
-
-    <div class="search-section">
-        <input type="text" id="keyword" placeholder="Search by keyword (e.g., 'multithreading', 'lambda')..." />
-        <button onclick="alert('Search functionality is not implemented in this demo.')">Search</button>
+    <div class="header">
+        <h1>📊 Stack Overflow Java Analysis</h1>
+        <p>CS209A Final Project - Data Analysis & Visualization</p>
     </div>
 
-    <div class="chart-container">
-        <h2>Thread Distribution by Type</h2>
-        <canvas id="typePieChart"></canvas>
+    <div id="loadingSection" class="loading" style="display: none;">
+        <h3>⏳ Loading data...</h3>
+        <p>Please wait while we load the Stack Overflow data.</p>
     </div>
-</div>
+
+    <div id="errorSection" class="error" style="display: none;"></div>
+
+    <div id="initSection" class="loading">
+        <h2>Welcome!</h2>
+        <p>Click the button below to load the Stack Overflow data.</p>
+        <button class="init-button" onclick="initializeData()">Load Data</button>
+    </div>
+
+    <div id="statsSection" style="display: none;">
+        <div class="stats-bar">
+            <div class="stat-card">
+                <h3 id="totalQuestions">0</h3>
+                <p>Total Questions</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="totalAnswers">0</h3>
+                <p>Total Answers</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="avgScore">0</h3>
+                <p>Average Score</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="answeredRate">0%</h3>
+                <p>Answered Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Topic Trends -->
+    <div id="section1" class="section" style="display: none;">
+        <h2>📈 Part I.1: Topic Trends Over Time</h2>
+        <p class="section-description">
+            This analysis shows how different Java topics have trended on Stack Overflow over time.
+            The activity is measured by the number of questions posted for each topic.
+        </p>
+        
+        <div class="controls">
+            <label>Time Period:</label>
+            <select id="trendsYears" onchange="loadTopicTrends()">
+                <option value="1">Past 1 Year</option>
+                <option value="2">Past 2 Years</option>
+                <option value="3" selected>Past 3 Years</option>
+                <option value="5">Past 5 Years</option>
+            </select>
+            <button onclick="loadTopicTrends()">Refresh</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="trendsChart"></canvas>
+        </div>
+        
+        <div class="insight-box">
+            <h4>💡 Key Insights</h4>
+            <p id="trendsInsight">Spring Boot and lambda expressions show increasing trends, reflecting modern Java development practices. Traditional topics like I/O show stable but declining interest as developers move to higher-level abstractions.</p>
+        </div>
+    </div>
+
+    <!-- Section 2: Topic Co-occurrence -->
+    <div id="section2" class="section" style="display: none;">
+        <h2>🔗 Part I.2: Topic Co-occurrence Analysis</h2>
+        <p class="section-description">
+            This analysis reveals which Java topics frequently appear together in questions,
+            indicating areas where developers face cross-cutting challenges.
+        </p>
+        
+        <div class="controls">
+            <label>Top N Pairs:</label>
+            <select id="cooccurrenceN" onchange="loadCooccurrence()">
+                <option value="5">Top 5</option>
+                <option value="10" selected>Top 10</option>
+                <option value="15">Top 15</option>
+                <option value="20">Top 20</option>
+            </select>
+            <button onclick="loadCooccurrence()">Refresh</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="cooccurrenceChart"></canvas>
+        </div>
+        
+        <div class="insight-box">
+            <h4>💡 Key Insights</h4>
+            <p id="cooccurrenceInsight">Common pairs like "spring-boot & jpa" or "multithreading & collections" reflect typical enterprise Java development challenges. These co-occurrences suggest topics that should be studied together.</p>
+        </div>
+    </div>
+
+    <!-- Section 3: Multithreading Pitfalls -->
+    <div id="section3" class="section" style="display: none;">
+        <h2>⚠️ Part I.3: Common Multithreading Pitfalls</h2>
+        <p class="section-description">
+            Multithreading is challenging! This analysis identifies the most common problems developers
+            encounter when working with Java concurrency by analyzing question content.
+        </p>
+        
+        <div class="controls">
+            <label>Show Top:</label>
+            <select id="pitfallsN" onchange="loadPitfalls()">
+                <option value="5">Top 5</option>
+                <option value="8" selected>Top 8</option>
+                <option value="10">Top 10</option>
+            </select>
+            <button onclick="loadPitfalls()">Refresh</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="pitfallsChart"></canvas>
+        </div>
+        
+        <div class="table-container" id="pitfallsTable"></div>
+        
+        <div class="insight-box">
+            <h4>💡 Key Insights</h4>
+            <p id="pitfallsInsight">Thread synchronization and race conditions dominate multithreading questions. These are fundamental concepts that developers struggle with consistently. Proper understanding of the Java Memory Model is crucial.</p>
+        </div>
+    </div>
+
+    <!-- Section 4: Solvability Analysis -->
+    <div id="section4" class="section" style="display: none;">
+        <h2>🎯 Part I.4: Solvable vs Hard-to-Solve Questions</h2>
+        <p class="section-description">
+            What makes a question solvable? This analysis compares characteristics of questions that
+            receive quality answers versus those that remain unsolved.
+        </p>
+        
+        <div class="chart-container">
+            <canvas id="solvabilityChart"></canvas>
+        </div>
+        
+        <div class="table-container" id="solvabilityTable"></div>
+        
+        <div class="insight-box">
+            <h4>💡 Key Insights</h4>
+            <p id="solvabilityInsight">Questions with code snippets, clear descriptions, and appropriate length are more likely to be solved. User reputation also plays a role in visibility. Questions that are too short or too long tend to receive fewer quality answers.</p>
+        </div>
+    </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('typePieChart').getContext('2d');
-        const data = {
-            labels: ['Type 1', 'Type 2', 'Type 3'],
-            datasets: [{
-                data: [45, 30, 25],
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56'
-                ],
-                borderWidth: 1
-            }]
-        };
+    let charts = {};
+    
+    // Initialize data
+    async function initializeData() {
+        document.getElementById('initSection').style.display = 'none';
+        document.getElementById('loadingSection').style.display = 'block';
+        
+        try {
+            const response = await fetch('/api/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'error') {
+                showError(data.message);
+                return;
+            }
+            
+            document.getElementById('loadingSection').style.display = 'none';
+            await loadStatistics();
+            showAllSections();
+            await loadAllAnalyses();
+            
+        } catch (error) {
+            showError('Failed to initialize data: ' + error.message);
+        }
+    }
+    
+    // Load statistics
+    async function loadStatistics() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+            
+            document.getElementById('totalQuestions').textContent = data.totalQuestions;
+            document.getElementById('totalAnswers').textContent = data.totalAnswers;
+            document.getElementById('avgScore').textContent = data.avgScore.toFixed(1);
+            document.getElementById('answeredRate').textContent = 
+                ((data.answeredQuestions / data.totalQuestions) * 100).toFixed(1) + '%';
+            
+            document.getElementById('statsSection').style.display = 'block';
+        } catch (error) {
+            console.error('Failed to load statistics:', error);
+        }
+    }
+    
+    // Load all analyses
+    async function loadAllAnalyses() {
+        await loadTopicTrends();
+        await loadCooccurrence();
+        await loadPitfalls();
+        await loadSolvability();
+    }
+    
+    // Show all sections
+    function showAllSections() {
+        document.getElementById('section1').style.display = 'block';
+        document.getElementById('section2').style.display = 'block';
+        document.getElementById('section3').style.display = 'block';
+        document.getElementById('section4').style.display = 'block';
+    }
+    
+    // Show error
+    function showError(message) {
+        const errorSection = document.getElementById('errorSection');
+        errorSection.textContent = '❌ Error: ' + message;
+        errorSection.style.display = 'block';
+        document.getElementById('loadingSection').style.display = 'none';
+        document.getElementById('initSection').style.display = 'block';
+    }
+    
+    // Analysis 1: Topic Trends
+    async function loadTopicTrends() {
+        const years = document.getElementById('trendsYears').value;
+        
+        try {
+            const response = await fetch(`/api/trends?years=${years}`);
+            const data = await response.json();
+            
+            const topicTrends = data.topicTrends;
+            
+            // Prepare data for line chart
+            const allMonths = new Set();
+            Object.values(topicTrends).forEach(monthData => {
+                Object.keys(monthData).forEach(month => allMonths.add(month));
+            });
+            const sortedMonths = Array.from(allMonths).sort();
+            
+            const datasets = Object.entries(topicTrends).map(([topic, monthData], index) => {
+                const colors = [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40'
+                ];
+                
+                return {
+                    label: topic,
+                    data: sortedMonths.map(month => monthData[month] || 0),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '33',
+                    tension: 0.4,
+                    fill: false
+                };
+            });
+            
+            if (charts.trends) charts.trends.destroy();
+            
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            charts.trends = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: `Java Topic Trends (Past ${years} Year${years > 1 ? 's' : ''})`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Questions'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time Period'
+                            }
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Failed to load topic trends:', error);
+        }
+    }
+    
+    // Analysis 2: Co-occurrence
+    async function loadCooccurrence() {
+        const topN = document.getElementById('cooccurrenceN').value;
+        
+        try {
+            const response = await fetch(`/api/cooccurrence?topN=${topN}`);
+            const data = await response.json();
+            
+            const topPairs = data.topPairs;
+            
+            if (charts.cooccurrence) charts.cooccurrence.destroy();
+            
+            const ctx = document.getElementById('cooccurrenceChart').getContext('2d');
+            charts.cooccurrence = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topPairs.map(p => p.topics),
+                    datasets: [{
+                        label: 'Co-occurrence Count',
+                        data: topPairs.map(p => p.count),
+                        backgroundColor: '#667eea',
+                        borderColor: '#5568d3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: `Top ${topN} Co-occurring Topic Pairs`
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Questions'
+                            }
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Failed to load co-occurrence:', error);
+        }
+    }
+    
+    // Analysis 3: Pitfalls
+    async function loadPitfalls() {
+        const topN = document.getElementById('pitfallsN').value;
+        
+        try {
+            const response = await fetch(`/api/pitfalls?topN=${topN}`);
+            const data = await response.json();
+            
+            const topPitfalls = data.topPitfalls;
+            
+            if (charts.pitfalls) charts.pitfalls.destroy();
+            
+            const ctx = document.getElementById('pitfallsChart').getContext('2d');
+            charts.pitfalls = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: topPitfalls.map(p => p.name),
+                    datasets: [{
+                        data: topPitfalls.map(p => p.count),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                            '#FF9F40', '#FF6384', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Common Multithreading Pitfalls Distribution'
+                        }
+                    }
+                }
+            });
+            
+            // Create table
+            let tableHTML = '<table><thead><tr><th>Pitfall</th><th>Count</th><th>Percentage</th><th>Example Questions</th></tr></thead><tbody>';
+            topPitfalls.forEach(pitfall => {
+                const examples = pitfall.examples.slice(0, 2).join('<br>• ');
+                tableHTML += `<tr>
+                    <td><strong>${pitfall.name}</strong></td>
+                    <td>${pitfall.count}</td>
+                    <td>${pitfall.percentage}</td>
+                    <td style="font-size: 0.9em; color: #666;">• ${examples}</td>
+                </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            document.getElementById('pitfallsTable').innerHTML = tableHTML;
+            
+        } catch (error) {
+            console.error('Failed to load pitfalls:', error);
+        }
+    }
+    
+    // Analysis 4: Solvability
+    async function loadSolvability() {
+        try {
+            const response = await fetch('/api/solvability');
+            const data = await response.json();
+            
+            const factors = data.factors;
+            const factorNames = Object.keys(factors);
+            
+            if (charts.solvability) charts.solvability.destroy();
+            
+            const ctx = document.getElementById('solvabilityChart').getContext('2d');
+            
+            // Extract numeric values for comparison
+            const solvableData = factorNames.map(name => {
+                const val = factors[name].solvable;
+                return parseFloat(val.replace(/[^\d.-]/g, ''));
+            });
+            
+            const hardData = factorNames.map(name => {
+                const val = factors[name].hardToSolve;
+                return parseFloat(val.replace(/[^\d.-]/g, ''));
+            });
+            
+            charts.solvability = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: factorNames,
+                    datasets: [{
+                        label: 'Solvable Questions',
+                        data: solvableData,
+                        backgroundColor: '#51cf66',
+                        borderColor: '#40c057',
+                        borderWidth: 1
+                    }, {
+                        label: 'Hard-to-Solve Questions',
+                        data: hardData,
+                        backgroundColor: '#ff6b6b',
+                        borderColor: '#fa5252',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Comparison of Solvable vs Hard-to-Solve Questions'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Create table
+            let tableHTML = '<table><thead><tr><th>Factor</th><th>Solvable</th><th>Hard-to-Solve</th><th>Insight</th></tr></thead><tbody>';
+            factorNames.forEach(name => {
+                const factor = factors[name];
+                tableHTML += `<tr>
+                    <td><strong>${name}</strong></td>
+                    <td style="color: #51cf66;">${factor.solvable}</td>
+                    <td style="color: #ff6b6b;">${factor.hardToSolve}</td>
+                    <td style="font-size: 0.9em; color: #666;">${factor.insight}</td>
+                </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            tableHTML += `<p style="margin-top: 15px; color: #666;"><strong>Summary:</strong> ${data.solvableCount} solvable questions vs ${data.hardToSolveCount} hard-to-solve questions analyzed.</p>`;
+            document.getElementById('solvabilityTable').innerHTML = tableHTML;
+            
+        } catch (error) {
+            console.error('Failed to load solvability:', error);
+        }
+    }
+</script>
+</body>
+</html>
 
-        const config = {
-            type: 'pie',
-            data: data,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
                     },
                     tooltip: {
                         callbacks: {
