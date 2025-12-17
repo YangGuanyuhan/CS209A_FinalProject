@@ -1,9 +1,12 @@
 package cs209a.finalproject_demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Question {
     private long questionId;
     private String title;
@@ -13,7 +16,10 @@ public class Question {
     private int score;
     private int viewCount;
     private int answerCount;
-    private boolean isAnswered;
+
+    @JsonProperty("isAnswered")
+    private boolean answered;
+
     private Long acceptedAnswerId;
     private long ownerId;
     private String ownerDisplayName;
@@ -93,11 +99,11 @@ public class Question {
     }
 
     public boolean isAnswered() {
-        return isAnswered;
+        return answered;
     }
 
     public void setAnswered(boolean answered) {
-        isAnswered = answered;
+        this.answered = answered;
     }
 
     public Long getAcceptedAnswerId() {

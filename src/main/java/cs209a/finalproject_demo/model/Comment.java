@@ -1,5 +1,8 @@
 package cs209a.finalproject_demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Comment {
     private long commentId;
     private long postId;
