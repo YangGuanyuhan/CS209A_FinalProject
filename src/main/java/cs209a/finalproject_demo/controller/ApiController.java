@@ -31,51 +31,63 @@ public class ApiController {
     /**
      * Initialize data - loads from file, generates sample data, or collects from
      * API
+     * 
+     * mode 参数:
+     * - "auto" (默认): 优先加载已有的 JSON 文件，如果没有则生成示例数据
+     * - "sample": 强制生成示例数据
+     * - "api": 从 Stack Overflow API 收集数据（需要在单独的收集器中完成）
      */
     @PostMapping("/init")
     public ResponseEntity<Map<String, Object>> initializeData(
             @RequestParam(defaultValue = "false") boolean forceCollect,
-            @RequestParam(defaultValue = "sample") String mode,
-            @RequestParam(defaultValue = "1000") int maxQuestions) {
+            @RequestParam(defaultValue = "auto") String mode,
+            @RequestParam(defaultValue = "5000") int maxQuestions) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Try to load from file first
-            if (!forceCollect && !mode.equals("sample")) {
+            // 模式 "auto" - 优先加载已有文件
+            if (mode.equals("auto") && !forceCollect) {
                 try {
                     cachedQuestions = dataCollectionService.loadData("stackoverflow_data.json");
+                    if (cachedQuestions != null && !cachedQuestions.isEmpty()) {
+                        response.put("status", "loaded");
+                        response.put("message", "Real data loaded from stackoverflow_data.json");
+                        response.put("dataType", "real");
+                        response.put("collected", cachedQuestions.size());
+                        return ResponseEntity.ok(response);
+                    }
                 } catch (Exception e) {
+                    System.out.println("No existing data file found, will generate sample data.");
                     cachedQuestions = null;
                 }
             }
 
-            if (cachedQuestions == null || cachedQuestions.isEmpty() || forceCollect) {
+            // 模式 "sample" 或没有找到已有数据
+            if (mode.equals("sample")
+                    || (mode.equals("auto") && (cachedQuestions == null || cachedQuestions.isEmpty()))) {
+                // Generate sample data for testing
+                response.put("status", "generating");
+                response.put("message", "Generating sample data for demonstration...");
+
+                cachedQuestions = sampleDataGenerator.generateSampleData(maxQuestions);
+                // 不覆盖已有的真实数据文件，使用不同的文件名
                 if (mode.equals("sample")) {
-                    // Generate sample data for testing
-                    response.put("status", "generating");
-                    response.put("message", "Generating sample data for demonstration...");
-
-                    cachedQuestions = sampleDataGenerator.generateSampleData(maxQuestions);
-                    dataCollectionService.saveData(cachedQuestions, "stackoverflow_data.json");
-
-                    response.put("dataType", "sample");
-                    response.put("collected", cachedQuestions.size());
+                    dataCollectionService.saveData(cachedQuestions, "sample_data.json");
                 } else {
-                    // Collect real data from Stack Overflow API
-                    response.put("status", "collecting");
-                    response.put("message", "Collecting data from Stack Overflow API...");
-
-                    cachedQuestions = dataCollectionService.collectData(maxQuestions);
                     dataCollectionService.saveData(cachedQuestions, "stackoverflow_data.json");
-
-                    response.put("dataType", "real");
-                    response.put("collected", cachedQuestions.size());
                 }
-            } else {
-                response.put("status", "loaded");
-                response.put("message", "Data loaded from cache");
+
+                response.put("dataType", "sample");
                 response.put("collected", cachedQuestions.size());
+            } else if (mode.equals("api")) {
+                // 提示用户使用独立的数据收集器
+                response.put("status", "info");
+                response.put("message",
+                        "Please use the standalone data collector in data-collector/ folder to collect real data from Stack Overflow API. This avoids API rate limits during demo.");
+                response.put("instruction",
+                        "cd data-collector && java StackOverflowDataCollector YOUR_API_KEY 1000 ..\\stackoverflow_data.json");
+                return ResponseEntity.ok(response);
             }
 
             return ResponseEntity.ok(response);
