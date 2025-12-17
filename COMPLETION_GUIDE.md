@@ -16,10 +16,10 @@
   - 支持 GZIP 压缩响应处理
   - 包含速率限制保护
   - JSON 文件存储和加载功能
-- ✅ `SampleDataGenerator.java` - 示例数据生成器
-  - 生成 1000+ 条模拟数据用于测试
-  - 包含真实的多线程问题示例
-  - 支持时间范围、标签、答案等完整数据
+- ✅ `data-collector/StackOverflowDataCollector.java` - 独立数据收集器
+  - 从 Stack Overflow API 收集真实数据
+  - 支持自定义收集数量
+  - 保存到 JSON 文件
 
 #### 3. 数据分析服务 (100%)
 - ✅ `DataAnalysisService.java` - 核心分析逻辑

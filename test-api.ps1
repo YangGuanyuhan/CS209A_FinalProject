@@ -1,5 +1,6 @@
 # CS209A Final Project - API Test Script
 # Run this after the application starts to test all REST endpoints
+# 注意：运行此脚本前需要先运行数据收集器，确保 stackoverflow_data.json 文件存在
 
 $baseUrl = "http://localhost:8080"
 
@@ -8,15 +9,17 @@ Write-Host "Testing REST API Endpoints" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Test 1: Initialize with sample data
-Write-Host "[Test 1] POST /api/init - Initialize data" -ForegroundColor Yellow
+# Test 1: Initialize data from JSON file
+Write-Host "[Test 1] POST /api/init - Load data from stackoverflow_data.json" -ForegroundColor Yellow
 try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/api/init?mode=sample&maxQuestions=1000" -Method POST
+    $response = Invoke-RestMethod -Uri "$baseUrl/api/init" -Method POST
     Write-Host "✓ Success: " -ForegroundColor Green -NoNewline
     Write-Host "$($response.message)"
     Write-Host "  Data count: $($response.collected)" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
+    Write-Host "  请确保 stackoverflow_data.json 文件存在" -ForegroundColor Yellow
 }
 Write-Host ""
 
@@ -31,7 +34,8 @@ try {
     Write-Host "  Total Questions: $($response.totalQuestions)" -ForegroundColor Gray
     Write-Host "  Total Answers: $($response.totalAnswers)" -ForegroundColor Gray
     Write-Host "  Average Score: $([math]::Round($response.avgScore, 2))" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""
@@ -43,7 +47,8 @@ try {
     Write-Host "✓ Success" -ForegroundColor Green
     $topicCount = $response.topicTrends.PSObject.Properties.Count
     Write-Host "  Topics analyzed: $topicCount" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""
@@ -57,7 +62,8 @@ try {
     if ($response.topPairs.Count -gt 0) {
         Write-Host "  Example: $($response.topPairs[0].topics) - $($response.topPairs[0].count) times" -ForegroundColor Gray
     }
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""
@@ -69,7 +75,8 @@ try {
     Write-Host "✓ Success" -ForegroundColor Green
     Write-Host "  Pitfalls found: $($response.topPitfalls.Count)" -ForegroundColor Gray
     Write-Host "  Total MT questions: $($response.totalMultithreadingQuestions)" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""
@@ -82,7 +89,8 @@ try {
     Write-Host "  Solvable questions: $($response.solvableCount)" -ForegroundColor Gray
     Write-Host "  Hard-to-solve questions: $($response.hardToSolveCount)" -ForegroundColor Gray
     Write-Host "  Factors analyzed: $($response.factors.PSObject.Properties.Count)" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""
@@ -93,7 +101,8 @@ try {
     $response = Invoke-RestMethod -Uri "$baseUrl/api/questions?limit=5"
     Write-Host "✓ Success" -ForegroundColor Green
     Write-Host "  Questions returned: $($response.Count)" -ForegroundColor Gray
-} catch {
+}
+catch {
     Write-Host "✗ Failed: $_" -ForegroundColor Red
 }
 Write-Host ""

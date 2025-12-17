@@ -18,7 +18,7 @@
 #### 服务层 (Service)
 - ✅ `DataCollectionService.java` - Stack Overflow API 数据收集
 - ✅ `DataAnalysisService.java` - 核心数据分析逻辑
-- ✅ `SampleDataGenerator.java` - 示例数据生成器
+- ✅ `data-collector/StackOverflowDataCollector.java` - 独立数据收集器
 
 #### 控制器 (Controller)
 - ✅ `HomeController.java` - 首页路由
@@ -59,11 +59,11 @@
 - 示例数据生成器
 
 **关键文件**：
-- `DataCollectionService.java` (242 行)
-- `SampleDataGenerator.java` (149 行)
+- `DataCollectionService.java` - 数据加载服务
+- `data-collector/StackOverflowDataCollector.java` - 独立数据收集器
 
 **评分要点满足**：
-- ✅ 收集至少 1000 条数据
+- ✅ 收集至少 1000 条真实数据
 - ✅ 本地持久化存储
 - ✅ 使用官方 REST API
 

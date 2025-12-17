@@ -7,7 +7,7 @@ A comprehensive web application for analyzing Stack Overflow questions related t
 ### 数据收集 (Data Collection - 10 points)
 - 通过 Stack Overflow REST API 收集 Java 相关问题
 - 支持离线存储（JSON 文件格式）
-- 支持示例数据生成用于测试
+- 使用独立的数据收集器程序收集数据
 
 ### 数据分析 (Data Analysis - 60 points)
 
@@ -39,7 +39,7 @@ GET  /api/trends         - 主题趋势分析 (?years=3)
 GET  /api/cooccurrence   - 主题共现分析 (?topN=10)
 GET  /api/pitfalls       - 多线程问题分析 (?topN=8)
 GET  /api/solvability    - 可解决性分析
-POST /api/init           - 初始化数据 (?mode=sample&maxQuestions=1000)
+POST /api/init           - 加载数据 (从 stackoverflow_data.json)
 GET  /api/questions      - 获取问题列表 (?limit=10)
 ```
 
@@ -58,11 +58,23 @@ GET  /api/questions      - 获取问题列表 (?limit=10)
 
 ## 快速开始 Quick Start
 
-### 1. 克隆项目
+### 1. 收集数据（重要！）
+
+首先需要运行数据收集器收集真实的 Stack Overflow 数据：
+
 ```bash
-git clone <repository-url>
-cd CS209A_FinalProject_demo
+cd data-collector
+javac -encoding UTF-8 StackOverflowDataCollector.java
+java StackOverflowDataCollector YOUR_API_KEY 1000 ..\stackoverflow_data.json
 ```
+
+或者使用提供的脚本：
+```bash
+cd data-collector
+.\collect-data.ps1 -ApiKey YOUR_API_KEY -Count 1000
+```
+
+⚠️ **重要**: 必须先收集数据，项目只从 `stackoverflow_data.json` 文件加载数据！
 
 ### 2. 运行项目
 
@@ -78,18 +90,8 @@ mvnw.cmd spring-boot:run
 ### 3. 访问应用
 打开浏览器访问：`http://localhost:8080`
 
-### 4. 初始化数据
-
-首次使用时，点击 "Load Data" 按钮。默认会生成 1000 条示例数据。
-
-#### 使用真实数据（可选）
-如果要收集真实的 Stack Overflow 数据，可以使用 API：
-
-```bash
-curl -X POST "http://localhost:8080/api/init?mode=api&maxQuestions=1000"
-```
-
-⚠️ **注意**: 使用真实 API 需要遵守 Stack Overflow 的速率限制
+### 4. 加载数据
+点击 "Load Data" 按钮加载收集好的数据。
 
 ## 项目结构 Project Structure
 
@@ -101,12 +103,14 @@ src/main/java/cs209a/finalproject_demo/
 │   └── ApiController.java             # REST API 控制器
 ├── service/
 │   ├── DataCollectionService.java     # 数据收集服务
-│   ├── DataAnalysisService.java       # 数据分析服务
-│   └── SampleDataGenerator.java       # 示例数据生成器
+│   └── DataAnalysisService.java       # 数据分析服务
 └── model/
     ├── Question.java                  # 问题实体
     ├── Answer.java                    # 答案实体
     └── Comment.java                   # 评论实体
+
+data-collector/
+└── StackOverflowDataCollector.java    # 独立数据收集器
 
 src/main/resources/
 ├── application.properties             # 应用配置
@@ -224,16 +228,16 @@ curl http://localhost:8080/api/solvability
 ## 常见问题 FAQ
 
 ### Q: 如何收集真实的 Stack Overflow 数据？
-A: 修改 `api/init` 调用，使用 `mode=api` 参数。注意 API 速率限制。
+A: 使用 `data-collector/StackOverflowDataCollector.java` 程序收集数据。详见上方"快速开始"部分。
 
 ### Q: 数据文件存储在哪里？
-A: 默认存储在项目根目录的 `stackoverflow_data.json` 文件中。
+A: 存储在项目根目录的 `stackoverflow_data.json` 文件中。
 
 ### Q: 如何添加新的分析功能？
 A: 在 `DataAnalysisService` 中添加新方法，在 `ApiController` 中添加新端点，在 `index.html` 中添加新的可视化。
 
-### Q: 示例数据是随机生成的吗？
-A: 是的，但使用固定种子(42)以确保可重现性。包含真实的多线程问题示例。
+### Q: 没有数据文件怎么办？
+A: 必须先运行数据收集器收集数据。项目不支持伪造数据，只能从真实数据文件加载。
 
 ## 评分要点 Grading Points
 

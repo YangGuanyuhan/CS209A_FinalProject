@@ -3,7 +3,6 @@ package cs209a.finalproject_demo.controller;
 import cs209a.finalproject_demo.model.Question;
 import cs209a.finalproject_demo.service.DataAnalysisService;
 import cs209a.finalproject_demo.service.DataCollectionService;
-import cs209a.finalproject_demo.service.SampleDataGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,78 +22,37 @@ public class ApiController {
     @Autowired
     private DataAnalysisService dataAnalysisService;
 
-    @Autowired
-    private SampleDataGenerator sampleDataGenerator;
-
     private List<Question> cachedQuestions = null;
 
     /**
-     * Initialize data - loads from file, generates sample data, or collects from
-     * API
-     * 
-     * mode 参数:
-     * - "auto" (默认): 优先加载已有的 JSON 文件，如果没有则生成示例数据
-     * - "sample": 强制生成示例数据
-     * - "api": 从 Stack Overflow API 收集数据（需要在单独的收集器中完成）
+     * Initialize data - loads from stackoverflow_data.json file only
+     * 请先使用独立的数据收集器收集数据并保存到 stackoverflow_data.json
      */
     @PostMapping("/init")
-    public ResponseEntity<Map<String, Object>> initializeData(
-            @RequestParam(defaultValue = "false") boolean forceCollect,
-            @RequestParam(defaultValue = "auto") String mode,
-            @RequestParam(defaultValue = "5000") int maxQuestions) {
+    public ResponseEntity<Map<String, Object>> initializeData() {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 模式 "auto" - 优先加载已有文件
-            if (mode.equals("auto") && !forceCollect) {
-                try {
-                    cachedQuestions = dataCollectionService.loadData("stackoverflow_data.json");
-                    if (cachedQuestions != null && !cachedQuestions.isEmpty()) {
-                        response.put("status", "loaded");
-                        response.put("message", "Real data loaded from stackoverflow_data.json");
-                        response.put("dataType", "real");
-                        response.put("collected", cachedQuestions.size());
-                        return ResponseEntity.ok(response);
-                    }
-                } catch (Exception e) {
-                    System.out.println("No existing data file found, will generate sample data.");
-                    cachedQuestions = null;
-                }
-            }
+            cachedQuestions = dataCollectionService.loadData("stackoverflow_data.json");
 
-            // 模式 "sample" 或没有找到已有数据
-            if (mode.equals("sample")
-                    || (mode.equals("auto") && (cachedQuestions == null || cachedQuestions.isEmpty()))) {
-                // Generate sample data for testing
-                response.put("status", "generating");
-                response.put("message", "Generating sample data for demonstration...");
-
-                cachedQuestions = sampleDataGenerator.generateSampleData(maxQuestions);
-                // 不覆盖已有的真实数据文件，使用不同的文件名
-                if (mode.equals("sample")) {
-                    dataCollectionService.saveData(cachedQuestions, "sample_data.json");
-                } else {
-                    dataCollectionService.saveData(cachedQuestions, "stackoverflow_data.json");
-                }
-
-                response.put("dataType", "sample");
+            if (cachedQuestions != null && !cachedQuestions.isEmpty()) {
+                response.put("status", "loaded");
+                response.put("message", "Data loaded from stackoverflow_data.json");
+                response.put("dataType", "real");
                 response.put("collected", cachedQuestions.size());
-            } else if (mode.equals("api")) {
-                // 提示用户使用独立的数据收集器
-                response.put("status", "info");
-                response.put("message",
-                        "Please use the standalone data collector in data-collector/ folder to collect real data from Stack Overflow API. This avoids API rate limits during demo.");
-                response.put("instruction",
-                        "cd data-collector && java StackOverflowDataCollector YOUR_API_KEY 1000 ..\\stackoverflow_data.json");
                 return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "error");
+                response.put("message",
+                        "No data found in stackoverflow_data.json. Please run the data collector first.");
+                return ResponseEntity.status(404).body(response);
             }
-
-            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             response.put("status", "error");
-            response.put("message", e.getMessage());
+            response.put("message", "Failed to load stackoverflow_data.json: " + e.getMessage() +
+                    ". Please run the data collector first to generate the data file.");
             return ResponseEntity.status(500).body(response);
         }
     }
