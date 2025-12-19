@@ -2,35 +2,67 @@ package cs209a.finalproject_demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Question {
+    @JsonProperty("question_id")
     private long questionId;
+
     private String title;
     private String body;
     private List<String> tags;
+
+    @JsonProperty("creation_date")
     private long creationDate;
+
     private int score;
+
+    @JsonProperty("view_count")
     private int viewCount;
+
+    @JsonProperty("answer_count")
     private int answerCount;
 
-    @JsonProperty("isAnswered")
+    @JsonProperty("is_answered")
     private boolean answered;
 
+    @JsonProperty("accepted_answer_id")
     private Long acceptedAnswerId;
+
     private long ownerId;
     private String ownerDisplayName;
     private int ownerReputation;
+
+    @JsonProperty("answers_data")
     private List<Answer> answers;
+
     private List<Comment> comments;
 
     public Question() {
         this.tags = new ArrayList<>();
         this.answers = new ArrayList<>();
         this.comments = new ArrayList<>();
+    }
+
+    // Parse nested owner object from JSON
+    @JsonSetter("owner")
+    public void setOwner(JsonNode ownerNode) {
+        if (ownerNode != null) {
+            if (ownerNode.has("user_id")) {
+                this.ownerId = ownerNode.get("user_id").asLong();
+            }
+            if (ownerNode.has("display_name")) {
+                this.ownerDisplayName = ownerNode.get("display_name").asText();
+            }
+            if (ownerNode.has("reputation")) {
+                this.ownerReputation = ownerNode.get("reputation").asInt();
+            }
+        }
     }
 
     // Getters and Setters

@@ -28,35 +28,47 @@ public class DataAnalysisService {
         public Map<String, Object> analyzeTopicTrends(List<Question> questions, int yearsPast) {
                 Map<String, Object> result = new HashMap<>();
 
-                // Calculate date range
+                // Calculate date range - support full range when yearsPast >= 15
                 long currentTime = System.currentTimeMillis() / 1000;
-                long startTime = currentTime - (yearsPast * 365L * 24 * 60 * 60);
+                long startTime;
+                if (yearsPast >= 15) {
+                        // For 15+ years, use the earliest data (2010-01-01 = 1262304000)
+                        startTime = 1262304000L;
+                } else {
+                        startTime = currentTime - (yearsPast * 365L * 24 * 60 * 60);
+                }
 
                 // Filter questions within time range
                 List<Question> filteredQuestions = questions.stream()
-                                .filter(q -> q.getCreationDate() >= startTime)
+                                .filter(q -> q.getCreationDate() >= startTime && q.getCreationDate() <= currentTime)
                                 .collect(Collectors.toList());
 
-                // Group questions by topic and year-month
+                // For long time ranges (>5 years), aggregate by year instead of year-month
+                boolean aggregateByYear = yearsPast > 5;
+
+                // Group questions by topic and time period
                 Map<String, Map<String, Integer>> topicTrends = new HashMap<>();
 
                 for (String topic : JAVA_TOPICS) {
-                        Map<String, Integer> monthlyCount = new TreeMap<>();
+                        Map<String, Integer> periodCount = new TreeMap<>();
 
                         for (Question question : filteredQuestions) {
                                 // Check if question is related to this topic
                                 if (isQuestionRelatedToTopic(question, topic)) {
-                                        String yearMonth = getYearMonth(question.getCreationDate());
-                                        monthlyCount.put(yearMonth, monthlyCount.getOrDefault(yearMonth, 0) + 1);
+                                        String period = aggregateByYear
+                                                        ? getYear(question.getCreationDate())
+                                                        : getYearMonth(question.getCreationDate());
+                                        periodCount.put(period, periodCount.getOrDefault(period, 0) + 1);
                                 }
                         }
 
-                        if (!monthlyCount.isEmpty()) {
-                                topicTrends.put(topic, monthlyCount);
+                        if (!periodCount.isEmpty()) {
+                                topicTrends.put(topic, periodCount);
                         }
                 }
 
                 result.put("topicTrends", topicTrends);
+                result.put("aggregateByYear", aggregateByYear);
                 result.put("yearsPast", yearsPast);
                 result.put("totalQuestions", filteredQuestions.size());
 
@@ -218,38 +230,55 @@ public class DataAnalysisService {
         public Map<String, Object> analyzeSolvability(List<Question> questions) {
                 Map<String, Object> result = new HashMap<>();
 
-                // Classify questions
+                // Classify questions - use more relaxed criteria
+                // Solvable: has accepted answer OR is marked as answered OR has answers with
+                // positive score
                 List<Question> solvableQuestions = questions.stream()
                                 .filter(q -> q.getAcceptedAnswerId() != null ||
-                                                (q.getAnswerCount() > 0 && q.getAnswers().stream()
-                                                                .anyMatch(a -> a.getScore() >= 5)))
+                                                q.isAnswered() ||
+                                                (q.getAnswerCount() > 0 && q.getAnswers() != null &&
+                                                                !q.getAnswers().isEmpty() &&
+                                                                q.getAnswers().stream()
+                                                                                .anyMatch(a -> a.getScore() >= 1)))
                                 .collect(Collectors.toList());
 
+                // Hard-to-solve: no accepted answer, not marked as answered, and either no
+                // answers or all answers have score < 1
                 List<Question> hardQuestions = questions.stream()
                                 .filter(q -> q.getAcceptedAnswerId() == null &&
-                                                (q.getAnswerCount() == 0 || q.getAnswers().stream()
-                                                                .allMatch(a -> a.getScore() < 2)))
+                                                !q.isAnswered() &&
+                                                (q.getAnswerCount() == 0 ||
+                                                                q.getAnswers() == null ||
+                                                                q.getAnswers().isEmpty() ||
+                                                                q.getAnswers().stream()
+                                                                                .allMatch(a -> a.getScore() < 1)))
                                 .collect(Collectors.toList());
 
-                // Factor 1: Code Snippet Presence
+                // Handle case where solvableQuestions is empty to avoid NaN
+                int solvableSize = Math.max(1, solvableQuestions.size());
+                int hardSize = Math.max(1, hardQuestions.size());
+
+                // Factor 1: Code Snippet Presence (check in answers since question body may not
+                // be available)
                 double solvableWithCode = solvableQuestions.stream()
-                                .filter(this::hasCodeSnippet)
-                                .count() * 100.0 / solvableQuestions.size();
+                                .filter(this::hasCodeSnippetInAnswers)
+                                .count() * 100.0 / solvableSize;
 
                 double hardWithCode = hardQuestions.stream()
-                                .filter(this::hasCodeSnippet)
-                                .count() * 100.0 / Math.max(1, hardQuestions.size());
+                                .filter(this::hasCodeSnippetInAnswers)
+                                .count() * 100.0 / hardSize;
 
-                // Factor 2: Question Length (as proxy for clarity)
+                // Factor 2: Title Length (as proxy for clarity, since body may not be
+                // available)
                 double avgSolvableLength = solvableQuestions.stream()
-                                .filter(q -> q.getBody() != null)
-                                .mapToInt(q -> q.getBody().length())
+                                .filter(q -> q.getTitle() != null)
+                                .mapToInt(q -> q.getTitle().length())
                                 .average()
                                 .orElse(0);
 
                 double avgHardLength = hardQuestions.stream()
-                                .filter(q -> q.getBody() != null)
-                                .mapToInt(q -> q.getBody().length())
+                                .filter(q -> q.getTitle() != null)
+                                .mapToInt(q -> q.getTitle().length())
                                 .average()
                                 .orElse(0);
 
@@ -289,16 +318,16 @@ public class DataAnalysisService {
                 // Prepare results
                 Map<String, Map<String, Object>> factors = new LinkedHashMap<>();
 
-                factors.put("Code Snippet Presence", Map.of(
+                factors.put("Answer Has Code Snippet", Map.of(
                                 "solvable", String.format("%.2f%%", solvableWithCode),
                                 "hardToSolve", String.format("%.2f%%", hardWithCode),
-                                "insight", "Questions with code snippets are more likely to be solved"));
+                                "insight", "Questions with code snippets in answers indicate better explanations"));
 
-                factors.put("Question Length", Map.of(
+                factors.put("Title Length", Map.of(
                                 "solvable", String.format("%.0f chars", avgSolvableLength),
                                 "hardToSolve", String.format("%.0f chars", avgHardLength),
                                 "insight",
-                                "Moderate length questions (clear but detailed) tend to get better answers"));
+                                "Clear and descriptive titles help questions get better answers"));
 
                 factors.put("Owner Reputation", Map.of(
                                 "solvable", String.format("%.0f", avgSolvableReputation),
@@ -348,6 +377,13 @@ public class DataAnalysisService {
                 return String.format("%d-%02d", date.getYear(), date.getMonthValue());
         }
 
+        private String getYear(long epochSeconds) {
+                LocalDate date = Instant.ofEpochSecond(epochSeconds)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate();
+                return String.valueOf(date.getYear());
+        }
+
         private boolean hasCodeSnippet(Question question) {
                 String body = question.getBody();
                 if (body == null || body.isEmpty()) {
@@ -356,5 +392,23 @@ public class DataAnalysisService {
                 // Check for common code markers
                 return body.contains("<code>") || body.contains("```") ||
                                 body.contains("<pre>") || body.matches("(?s).*\\{.*\\}.*");
+        }
+
+        /**
+         * Check if any answer to the question contains code snippets
+         */
+        private boolean hasCodeSnippetInAnswers(Question question) {
+                if (question.getAnswers() == null || question.getAnswers().isEmpty()) {
+                        return false;
+                }
+                return question.getAnswers().stream()
+                                .anyMatch(answer -> {
+                                        String body = answer.getBody();
+                                        if (body == null || body.isEmpty()) {
+                                                return false;
+                                        }
+                                        return body.contains("<code>") || body.contains("```") ||
+                                                        body.contains("<pre>");
+                                });
         }
 }

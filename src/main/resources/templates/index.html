@@ -272,8 +272,10 @@
             <select id="trendsYears" onchange="loadTopicTrends()">
                 <option value="1">Past 1 Year</option>
                 <option value="2">Past 2 Years</option>
-                <option value="3" selected>Past 3 Years</option>
+                <option value="3">Past 3 Years</option>
                 <option value="5">Past 5 Years</option>
+                <option value="10">Past 10 Years</option>
+                <option value="15" selected>All Data (2010-2025)</option>
             </select>
             <button onclick="loadTopicTrends()">Refresh</button>
         </div>
@@ -440,37 +442,56 @@
             const data = await response.json();
             
             const topicTrends = data.topicTrends;
+            const aggregateByYear = data.aggregateByYear || false;
             
             // Prepare data for line chart
-            const allMonths = new Set();
-            Object.values(topicTrends).forEach(monthData => {
-                Object.keys(monthData).forEach(month => allMonths.add(month));
+            const allPeriods = new Set();
+            Object.values(topicTrends).forEach(periodData => {
+                Object.keys(periodData).forEach(period => allPeriods.add(period));
             });
-            const sortedMonths = Array.from(allMonths).sort();
+            const sortedPeriods = Array.from(allPeriods).sort();
             
-            const datasets = Object.entries(topicTrends).map(([topic, monthData], index) => {
-                const colors = [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40'
-                ];
-                
+            // Use more distinct colors for better visualization
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#E7E9ED', '#C9CBCF', '#7CB342', '#5C6BC0',
+                '#26A69A', '#EF5350', '#AB47BC', '#42A5F5', '#66BB6A',
+                '#FFA726', '#8D6E63', '#78909C'
+            ];
+            
+            const datasets = Object.entries(topicTrends).map(([topic, periodData], index) => {
                 return {
                     label: topic,
-                    data: sortedMonths.map(month => monthData[month] || 0),
+                    data: sortedPeriods.map(period => periodData[period] || 0),
                     borderColor: colors[index % colors.length],
                     backgroundColor: colors[index % colors.length] + '33',
                     tension: 0.4,
-                    fill: false
+                    fill: false,
+                    borderWidth: 2,
+                    pointRadius: aggregateByYear ? 4 : 1,
+                    pointHoverRadius: 6
                 };
             });
             
             if (charts.trends) charts.trends.destroy();
             
             const ctx = document.getElementById('trendsChart').getContext('2d');
+            
+            // 计算合适的步长，当数据点过多时减少X轴标签
+            const totalPoints = sortedPeriods.length;
+            let stepSize = 1;
+            if (!aggregateByYear) {
+                if (totalPoints > 60) stepSize = 6;      // 超过5年的数据，每6个月显示一次
+                else if (totalPoints > 36) stepSize = 3; // 超过3年的数据，每3个月显示一次
+                else if (totalPoints > 12) stepSize = 2; // 超过1年的数据，每2个月显示一次
+            }
+            
+            const xAxisLabel = aggregateByYear ? 'Year' : 'Time Period (Year-Month)';
+            
             charts.trends = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sortedMonths,
+                    labels: sortedPeriods,
                     datasets: datasets
                 },
                 options: {
@@ -483,7 +504,7 @@
                         },
                         title: {
                             display: true,
-                            text: `Java Topic Trends (Past ${years} Year${years > 1 ? 's' : ''})`
+                            text: years >= 15 ? 'Java Topic Trends (2010-2025 Full Data)' : `Java Topic Trends (Past ${years} Year${years > 1 ? 's' : ''})`
                         }
                     },
                     scales: {
@@ -497,7 +518,14 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Time Period'
+                                text: xAxisLabel
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index) {
+                                    return index % stepSize === 0 ? this.getLabelForValue(value) : '';
+                                }
                             }
                         }
                     }
@@ -637,33 +665,56 @@
             
             const ctx = document.getElementById('solvabilityChart').getContext('2d');
             
-            // Extract numeric values for comparison
+            // Extract numeric values for comparison, handling potential NaN values
             const solvableData = factorNames.map(name => {
                 const val = factors[name].solvable;
-                return parseFloat(val.replace(/[^\d.-]/g, ''));
+                const num = parseFloat(val.replace(/[^\d.-]/g, ''));
+                return isNaN(num) ? 0 : num;
             });
             
             const hardData = factorNames.map(name => {
                 const val = factors[name].hardToSolve;
-                return parseFloat(val.replace(/[^\d.-]/g, ''));
+                const num = parseFloat(val.replace(/[^\d.-]/g, ''));
+                return isNaN(num) ? 0 : num;
             });
             
+            // Normalize data to 0-100 scale for each factor (max of solvable and hard becomes 100)
+            const normalizedSolvable = [];
+            const normalizedHard = [];
+            
+            for (let i = 0; i < factorNames.length; i++) {
+                const maxVal = Math.max(solvableData[i], hardData[i], 1); // Avoid division by zero
+                normalizedSolvable.push((solvableData[i] / maxVal) * 100);
+                normalizedHard.push((hardData[i] / maxVal) * 100);
+            }
+            
+            // Use Radar Chart for better visualization of multi-dimensional comparison
             charts.solvability = new Chart(ctx, {
-                type: 'bar',
+                type: 'radar',
                 data: {
-                    labels: factorNames,
+                    labels: factorNames.map(name => {
+                        // Shorten long labels for radar chart
+                        if (name.length > 15) {
+                            return name.split(' ').slice(0, 2).join(' ');
+                        }
+                        return name;
+                    }),
                     datasets: [{
                         label: 'Solvable Questions',
-                        data: solvableData,
-                        backgroundColor: '#51cf66',
-                        borderColor: '#40c057',
-                        borderWidth: 1
+                        data: normalizedSolvable,
+                        backgroundColor: 'rgba(81, 207, 102, 0.3)',
+                        borderColor: '#51cf66',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#51cf66',
+                        pointRadius: 4
                     }, {
                         label: 'Hard-to-Solve Questions',
-                        data: hardData,
-                        backgroundColor: '#ff6b6b',
-                        borderColor: '#fa5252',
-                        borderWidth: 1
+                        data: normalizedHard,
+                        backgroundColor: 'rgba(255, 107, 107, 0.3)',
+                        borderColor: '#ff6b6b',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ff6b6b',
+                        pointRadius: 4
                     }]
                 },
                 options: {
@@ -676,12 +727,38 @@
                         },
                         title: {
                             display: true,
-                            text: 'Comparison of Solvable vs Hard-to-Solve Questions'
+                            text: 'Solvable vs Hard-to-Solve Questions (Normalized Comparison)'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const factorIndex = context.dataIndex;
+                                    const factorName = factorNames[factorIndex];
+                                    const factor = factors[factorName];
+                                    if (context.datasetIndex === 0) {
+                                        return `Solvable: ${factor.solvable}`;
+                                    } else {
+                                        return `Hard-to-Solve: ${factor.hardToSolve}`;
+                                    }
+                                }
+                            }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11
+                                }
+                            }
                         }
                     }
                 }

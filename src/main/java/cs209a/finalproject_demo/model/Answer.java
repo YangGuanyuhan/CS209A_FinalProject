@@ -2,18 +2,27 @@ package cs209a.finalproject_demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Answer {
+    @JsonProperty("answer_id")
     private long answerId;
+
+    @JsonProperty("question_id")
     private long questionId;
+
     private String body;
+
+    @JsonProperty("creation_date")
     private long creationDate;
+
     private int score;
 
-    @JsonProperty("isAccepted")
+    @JsonProperty("is_accepted")
     private boolean accepted;
 
     private long ownerId;
@@ -23,6 +32,22 @@ public class Answer {
 
     public Answer() {
         this.comments = new ArrayList<>();
+    }
+
+    // Parse nested owner object from JSON
+    @JsonSetter("owner")
+    public void setOwner(JsonNode ownerNode) {
+        if (ownerNode != null) {
+            if (ownerNode.has("user_id")) {
+                this.ownerId = ownerNode.get("user_id").asLong();
+            }
+            if (ownerNode.has("display_name")) {
+                this.ownerDisplayName = ownerNode.get("display_name").asText();
+            }
+            if (ownerNode.has("reputation")) {
+                this.ownerReputation = ownerNode.get("reputation").asInt();
+            }
+        }
     }
 
     // Getters and Setters
