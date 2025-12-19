@@ -42,7 +42,7 @@ public class StackOverflowDataCollector {
     public static void main(String[] args) {
         // 解析命令行参数
         String apiKey = "rl_kYzCCEJDh9UVbgq4SHLHEor33";
-        int targetCount = 4000;
+        int targetCount = 10000;
         String outputFile = "stackoverflow_data.json";
 
         if (apiKey == null || apiKey.isEmpty()) {
@@ -190,8 +190,8 @@ public class StackOverflowDataCollector {
      * 构建问题列表 URL
      */
     private String buildQuestionsUrl(int page) {
-        // 获取最近3年的问题
-        long threeYearsAgo = System.currentTimeMillis() / 1000 - (3L * 365 * 24 * 60 * 60);
+        // 获取最近15年的问题
+        long threeYearsAgo = System.currentTimeMillis() / 1000 - (15L * 365 * 24 * 60 * 60);
 
         return String.format(
                 "%s/questions?page=%d&pagesize=%d&order=desc&sort=votes&tagged=%s&site=%s&filter=%s&fromdate=%d&key=%s",

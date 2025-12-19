@@ -325,16 +325,6 @@
             encounter when working with Java concurrency by analyzing question content.
         </p>
         
-        <div class="controls">
-            <label>Show Top:</label>
-            <select id="pitfallsN" onchange="loadPitfalls()">
-                <option value="5">Top 5</option>
-                <option value="8" selected>Top 8</option>
-                <option value="10">Top 10</option>
-            </select>
-            <button onclick="loadPitfalls()">Refresh</button>
-        </div>
-        
         <div class="chart-container">
             <canvas id="pitfallsChart"></canvas>
         </div>
@@ -576,7 +566,7 @@
     
     // Analysis 3: Pitfalls
     async function loadPitfalls() {
-        const topN = document.getElementById('pitfallsN').value;
+        const topN = 8; // Fixed value, show all detected pitfalls
         
         try {
             const response = await fetch(`/api/pitfalls?topN=${topN}`);
@@ -626,6 +616,7 @@
                 </tr>`;
             });
             tableHTML += '</tbody></table>';
+            tableHTML += `<p style="margin-top: 10px; font-size: 0.9em; color: #888;">Showing ${topPitfalls.length} pitfalls found (requested Top ${topN}). Total multithreading questions: ${data.totalMultithreadingQuestions}</p>`;
             document.getElementById('pitfallsTable').innerHTML = tableHTML;
             
         } catch (error) {
@@ -715,24 +706,6 @@
             console.error('Failed to load solvability:', error);
         }
     }
-</script>
-</body>
-</html>
-
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.raw}%`;
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        new Chart(ctx, config);
-    });
 </script>
 </body>
 </html>
