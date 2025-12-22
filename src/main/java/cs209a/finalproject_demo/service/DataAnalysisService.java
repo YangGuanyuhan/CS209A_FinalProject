@@ -19,13 +19,28 @@ public class DataAnalysisService {
                         "generics", "collections", "io", "lambda", "stream",
                         "multithreading", "concurrency", "thread", "socket",
                         "reflection", "spring", "spring-boot", "jpa", "hibernate",
-                        "exception", "testing", "junit", "annotation");
+                        "exception", "testing", "junit", "annotation","android");
 
-        /**
-         * Part I.1: Topic Trends Analysis
-         * Analyze the trend of different Java topics over time
-         */
-        public Map<String, Object> analyzeTopicTrends(List<Question> questions, int yearsPast) {
+    /**
+     * Part I.1: Topic Trends Analysis
+     * <p>
+     * Analyzes the trend of different Java-related topics over a specified
+     * time range and aggregates question counts by time period.
+     * @return a {@code Map<String, Object>} containing topic trend analysis results:
+     *         <ul>
+     *           <li>{@code "topicTrends"} – a {@code Map<String, Map<String, Integer>>}
+     *               where each key is a Java topic, and the value maps a time period
+     *               (year or year-month, represented as {@link String}) to the number
+     *               of related questions</li>
+     *           <li>{@code "aggregateByYear"} – a {@link Boolean} indicating whether
+     *               the data is aggregated by year instead of by month</li>
+     *           <li>{@code "yearsPast"} – an {@link Integer} representing the number
+     *               of years included in the analysis</li>
+     *           <li>{@code "totalQuestions"} – an {@link Integer} indicating the total
+     *               number of questions within the selected time range</li>
+     *         </ul>
+     */
+    public Map<String, Object> analyzeTopicTrends(List<Question> questions, int yearsPast) {
                 Map<String, Object> result = new HashMap<>();
 
                 // Calculate date range - support full range when yearsPast >= 15
