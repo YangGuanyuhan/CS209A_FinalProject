@@ -1,91 +1,53 @@
-# CS209A Final Project Demo
+# 📊 StackOverflow Java Q&A Analytics Platform (CS209A Final Project)
 
-This is a simple Spring Boot project template designed to help you kickstart your CS209A final project — a web application for analyzing Stack Overflow Java Q&A data.
+> A high-performance data visualization and analysis platform for Stack Overflow Java threads, built with Spring Boot and Real-time Stream Processing.
 
-The demo includes:
-- A basic homepage with a search bar and a pie chart.
-- All code is written in Java using Spring Boot 3.5.7 and JDK 22.
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
+![Java](https://img.shields.io/badge/Java-22-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-green)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 
----
+## 📖 Project Overview
 
-## 🛠 Project Setup & Configuration
+This project is a web application designed to analyze, visualize, and gain insights from over **1,000+** Stack Overflow questions tagged with `java`. Unlike traditional CRUD applications, this platform focuses on **dynamic, real-time data analysis** using Java's memory-efficient Stream APIs.
 
-### Prerequisites
-- **Java Development Kit (JDK) 22** (or higher)
-- **IntelliJ IDEA** (Community or Ultimate Edition)
+It answers critical questions for Java developers, such as topic trends, common multithreading pitfalls, and factors affecting question solvability.
 
-### Creating the Project from Scratch (Recommended)
+### ✨ Key Features
 
-If you prefer to create the project yourself (highly recommended for learning), follow these steps:
-
-1. Open IntelliJ IDEA → **New Project** → Select **Spring Initializr**.
-2. Configure the project as shown in the image below:
-
-   ![Project Creation Settings](/imgs/proj_setting_0.png)
-
-    - **Name**: `FinalProject_demo`
-    - **Group**: `cs209a`
-    - **Artifact**: `finalproject_demo`
-    - **Package name**: `cs209a.finalproject_demo`
-    - **JDK**: `openjdk-22 Oracle OpenJDK 22.0.1`
-    - **Packaging**: `Jar`
-
-3. Add the following dependencies:
-
-   ![Dependencies Selection](/imgs/proj_setting_1.png)
-
-    - **Spring Web**
-    - **Thymeleaf**
-    - **Spring Boot DevTools**
-
-4. Click **Create** to generate the project.
+- **📈 Topic Trend Analysis**: Visualizes the popularity of specific Java topics (e.g., *Spring*, *Concurrency*) over time.
+- **🔗 Co-occurrence Graph**: Identifies technology stacks that frequently appear together (e.g., *Spring Boot* + *Hibernate*).
+- **⚠️ Multithreading Pitfall Mining**: Uses NLP/Regex techniques to extract common error patterns in concurrency questions.
+- **✅ Solvability Analysis**: Compares solved vs. unsolved questions based on multiple dimensions.
+- **⚡ Real-time Processing**: All analyses are computed on-the-fly using **Java 8 Streams & Lambdas**, ensuring up-to-date results without database pre-computation.
 
 ---
 
-## ▶️ How to Run the Project
+## 🛠 Tech Stack
 
-1. Clone this repository (or create your own project based on the instructions above).
-2. Open the project folder in IntelliJ IDEA.
-3. Navigate to the main class: `src/main/java/cs209a/finalproject_demo/FinalProjectDemoApplication.java`.
-4. Click the **Run** button (green triangle) next to the `main` method.
-
-You will see logs similar to this in the console:
-
-![Console Output](/imgs/cmd_output.png)
-
-> ✅ Look for the line: `Tomcat started on port 8080 (http)` — this means your server is running!
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Backend** | Java 22, Spring Boot 3.5.7 | Core RESTful API & Business Logic |
+| **Analysis** | Java Streams, Regex | In-memory dynamic data processing |
+| **Database** | PostgreSQL | Persistent storage for raw Q&A data |
+| **Persistence** | MyBatis / JPA | ORM & Data Access Layer |
+| **Frontend** | [Vue.js / Thymeleaf] | Data visualization (ECharts/Chart.js) |
+| **Build** | Maven / Gradle | Dependency Management |
 
 ---
 
-## 🌐 Accessing the Frontend
+## 🚀 How to Run
 
-Once the server is running, open your browser and visit:
+### 1. Prerequisites
+- **JDK 22** or higher
+- **PostgreSQL** (Ensure the service is running)
+- **IntelliJ IDEA** (Recommended)
 
-```
-http://localhost:8080
-```
-
-You should see the following homepage:
-
-![Homepage Screenshot](/imgs/web_output.png)
-
-This page includes:
-- A **search bar** (placeholder functionality only).
-- A **pie chart** showing "Thread Distribution by Type" (Type 1, Type 2, Type 3).
-
----
-
-## 🧩 Next Steps for Your Final Project
-
-This demo provides a solid foundation. To complete your project, you should:
-
-1. Implement **real data collection** from Stack Overflow (at least 1000 threads).
-2. Store the data in a **database** (e.g., PostgreSQL or MySQL).
-3. Build **four core analyses** (Topic Trends, Co-occurrence, Multithreading Pitfalls, Solvable vs. Hard-to-Solve Questions).
-4. Connect your frontend charts to **dynamic backend APIs**.
-5. Ensure all analysis is **real-time** and **not precomputed**.
-
-
----
-
-Happy coding! 🚀
+### 2. Database Configuration
+1. Create a database named `stackoverflow_data` in PostgreSQL.
+2. Import the raw data script (if provided) or allow the application to fetch/initialize data.
+3. Update `src/main/resources/application.properties` with your credentials:
+   ```properties
+   spring.datasource.url=jdbc:postgresql://localhost:5432/stackoverflow_data
+   spring.datasource.username=your_username
+   spring.datasource.password=your_password
