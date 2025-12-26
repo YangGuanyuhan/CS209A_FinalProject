@@ -28,8 +28,7 @@ It answers critical questions for Java developers, such as topic trends, common 
 | :--- | :--- | :--- |
 | **Backend** | Java 22, Spring Boot 3.5.7 | Core RESTful API & Business Logic |
 | **Analysis** | Java Streams, Regex | In-memory dynamic data processing |
-| **Persistence** | MyBatis / JPA | ORM & Data Access Layer |
-| **Frontend** | [Vue.js / Thymeleaf] | Data visualization (ECharts/Chart.js) |
-| **Build** | Maven / Gradle | Dependency Management |
+| **Frontend** | [Thymeleaf] | Data visualization (ECharts/Chart.js) |
+| **Build** | Maven  | Dependency Management |
 
 ---
