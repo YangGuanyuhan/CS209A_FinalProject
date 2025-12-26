@@ -5,7 +5,6 @@
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
 ![Java](https://img.shields.io/badge/Java-22-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-green)
-![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 
 ## 📖 Project Overview
 
