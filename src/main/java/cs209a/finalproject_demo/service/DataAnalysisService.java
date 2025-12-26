@@ -91,14 +91,26 @@ public class DataAnalysisService {
         }
 
         /**
-         * Part I.2: Co-occurrence of Topics
-         * Find top N pairs of topics that frequently appear together
+         * Part I.2: Topic Co-occurrence Analysis
+         * <p>
+         * Analyzes the co-occurrence of Java-related topics within questions and
+         * identifies the top N most frequently co-occurring topic pairs.
+         * @return a {@code Map<String, Object>} containing topic co-occurrence analysis results:
+         *         <ul>
+         *           <li>{@code "topPairs"} – a {@code List<Map<String, Object>>} where each map contains:
+         *               <ul>
+         *                 <li>{@code "topics"} – a {@link String} representing the co-occurring topic pair</li>
+         *                 <li>{@code "count"} – an {@link Integer} indicating the number of co-occurrences</li>
+         *               </ul></li>
+         *           <li>{@code "topN"} – an {@link Integer} representing the number of top pairs returned</li>
+         *         </ul>
+         *
          */
         public Map<String, Object> analyzeTopicCooccurrence(List<Question> questions, int topN) {
                 Map<String, Object> result = new HashMap<>();
 
                 // Count co-occurrences
-                Map<String, Integer> cooccurrenceCount = new HashMap<>();
+                Map<String, Integer> cooccurrenceCount = new HashMap<>();//string is "topic1 & topic2", integer is count
 
                 for (Question question : questions) {
                         List<String> relatedTopics = new ArrayList<>();
@@ -148,8 +160,24 @@ public class DataAnalysisService {
         }
 
         /**
-         * Part I.3: Common Pitfalls in Multithreading
-         * Identify recurring problems in Java multithreading
+         * Part I.3: Multithreading Pitfalls Analysis
+         * <p>
+         * Identifies and counts common multithreading pitfalls in Java-related questions,
+         * and provides examples for the top N pitfalls.
+         * @return a {@code Map<String, Object>} containing multithreading pitfalls analysis results:
+         *         <ul>
+         *           <li>{@code "topPitfalls"} – a {@code List<Map<String, Object>>} where each map contains:
+         *               <ul>
+         *                 <li>{@code "name"} – a {@link String} representing the pitfall name</li>
+         *                 <li>{@code "count"} – an {@link Integer} indicating the number of occurrences</li>
+         *                 <li>{@code "percentage"} – a {@link String} representing the percentage of
+         *                     questions affected by this pitfall</li>
+         *                 <li>{@code "examples"} – a {@code List<String>} of example question titles</li>
+         *               </ul></li>
+         *           <li>{@code "totalMultithreadingQuestions"} – an {@link Integer} indicating the total
+         *               number of multithreading-related questions analyzed</li>
+         *           <li>{@code "topN"} – an {@link Integer} representing the number of top pitfalls returned</li>
+         *         </ul>
          */
         public Map<String, Object> analyzeMultithreadingPitfalls(List<Question> questions, int topN) {
                 Map<String, Object> result = new HashMap<>();
@@ -239,8 +267,25 @@ public class DataAnalysisService {
         }
 
         /**
-         * Part I.4: Solvable vs Hard-to-Solve Questions
-         * Compare characteristics of solvable and hard-to-solve questions
+         * Part I.4: Solvability Analysis
+         * <p>
+         * Analyzes factors that influence the solvability of Java-related questions
+         * by comparing questions that were successfully solved versus those that
+         * remained unsolved.
+         * @return a {@code Map<String, Object>} containing solvability analysis results:
+         *         <ul>
+         *           <li>{@code "solvableCount"} – an {@link Integer} indicating the number of
+         *               solvable questions</li>
+         *           <li>{@code "hardToSolveCount"} – an {@link Integer} indicating the number of
+         *               hard-to-solve questions</li>
+         *           <li>{@code "factors"} – a {@code Map<String, Map<String, Object>>} where each key is a
+         *               factor name, and the value contains:
+         *               <ul>
+         *                 <li>{@code "solvable"} – a {@link String} representing the metric for solvable questions</li>
+         *                 <li>{@code "hardToSolve"} – a {@link String} representing the metric for hard-to-solve questions</li>
+         *                 <li>{@code "insight"} – a {@link String} providing insights about the factor</li>
+         *               </ul></li>
+         *         </ul>
          */
         public Map<String, Object> analyzeSolvability(List<Question> questions) {
                 Map<String, Object> result = new HashMap<>();

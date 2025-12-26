@@ -22,11 +22,11 @@ public class ApiController {
     @Autowired
     private DataAnalysisService dataAnalysisService;
 
-    private List<Question> cachedQuestions = null;
+    private List<Question> cachedQuestions = null;// Cache loaded questions to avoid reloading
 
     /**
      * Initialize data - loads from stackoverflow_data.json file only
-     * 请先使用独立的数据收集器收集数据并保存到 stackoverflow_data.json
+     * Please use a separate data collector to collect data and save it to stackoverflow_data.json
      */
     @PostMapping("/init")
     public ResponseEntity<Map<String, Object>> initializeData() {
