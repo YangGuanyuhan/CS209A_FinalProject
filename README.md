@@ -28,25 +28,8 @@ It answers critical questions for Java developers, such as topic trends, common 
 | :--- | :--- | :--- |
 | **Backend** | Java 22, Spring Boot 3.5.7 | Core RESTful API & Business Logic |
 | **Analysis** | Java Streams, Regex | In-memory dynamic data processing |
-| **Database** | PostgreSQL | Persistent storage for raw Q&A data |
 | **Persistence** | MyBatis / JPA | ORM & Data Access Layer |
 | **Frontend** | [Vue.js / Thymeleaf] | Data visualization (ECharts/Chart.js) |
 | **Build** | Maven / Gradle | Dependency Management |
 
 ---
-
-## 🚀 How to Run
-
-### 1. Prerequisites
-- **JDK 22** or higher
-- **PostgreSQL** (Ensure the service is running)
-- **IntelliJ IDEA** (Recommended)
-
-### 2. Database Configuration
-1. Create a database named `stackoverflow_data` in PostgreSQL.
-2. Import the raw data script (if provided) or allow the application to fetch/initialize data.
-3. Update `src/main/resources/application.properties` with your credentials:
-   ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/stackoverflow_data
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
